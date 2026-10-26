@@ -1,0 +1,56 @@
+# Exact Architecture & Parameter Budget Configuration for JEV-Set-150M
+model_name: "JEV-Set-150M"
+edition: "v0.4.1"
+license: "Apache-2.0"
+
+backbone:
+  name_or_path: "cross-encoder/ettin-reranker-150m-v1"
+  fallback_name_or_path: "jhu-clsp/ettin-encoder-150m"
+  architecture: "ModernBERT / Ettin"
+  vocab_size: 50368
+  hidden_size: 768
+  num_hidden_layers: 22
+  num_attention_heads: 12
+  intermediate_size: 1152
+  activation: "geglu"
+  rope_theta: 160000.0
+  dtype: "bfloat16"
+  native_max_position_embeddings: 8192
+  extended_window_max_tokens: 32768
+  exact_parameters: 149014272
+
+head:
+  type: "EquivariantSetInteractionHead"
+  dtype: "float32"
+  hidden_size: 768
+  set_hidden_size: 256
+  set_num_heads: 8
+  mlp_width: 256
+  num_question_types: 5
+  num_decision_regimes: 3
+  dropout: 0.05
+  exact_parameters: 922633
+
+parameter_budget:
+  backbone_parameters: 149014272
+  head_parameters: 922633
+  total_served_parameters: 149936905
+  hard_ceiling: 150000000
+  safety_margin_below_ceiling: 63095
+
+packing:
+  max_window_tokens: 8192
+  max_state_tokens: 6144
+  head_anchor_tokens: 512
+  window_overlap_tokens: 1024
+  option_chunk_size: 64
+  max_options_supported: 512
+  allow_truncation: false
+
+inference:
+  multi_label_threshold: 0.50
+  multi_label_max_gap: 1.35
+  min_prob_clamp: 1.0e-7
+  max_prob_clamp: 0.9999999
+  target_median_latency_ms: 13.8
+  hard_latency_gate_ms: 1000.0

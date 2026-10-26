@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jev-set-150m"
+version = "0.4.1"
+description = "JEV-Set-150M: Tree-Masked Shared-State Encoder with Permutation-Equivariant Set-Interaction Head (149,936,905 params) for the Jev Decision Index v0.4.1"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "JEV-Set-150M Research & Engineering Team" }
+]
+dependencies = [
+    "torch>=2.5.1",
+    "transformers>=4.48.0",
+    "datasets>=3.2.0",
+    "accelerate>=1.2.1",
+    "safetensors>=0.5.0",
+    "scipy>=1.14.1",
+    "scikit-learn>=1.6.0",
+    "datasketch>=1.6.5",
+    "pyyaml>=6.0.2",
+    "tqdm>=4.67.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = [".", "src", "external/decision-index"]
+testpaths = ["tests"]
+addopts = "-v"

@@ -1,0 +1,73 @@
+# Stage 1: Broad OOD Decision Pretraining (1.33M examples, 2 Epochs)
+# Optimized for Google Colab Pro (A100 40GB/80GB, L4 24GB, or T4 16GB)
+stage: "stage1_ood"
+seed: 42
+model_config: "configs/model_150m.yaml"
+init_checkpoint: "cross-encoder/ettin-reranker-150m-v1"
+output_dir: "checkpoints/jev-set-150m-stage1"
+
+data:
+  train_path: "data/processed/stage1_ood_train.jsonl"
+  val_same_skill_path: "data/processed/s_val_5fold.jsonl"
+  val_new_domains_path: "data/processed/o_val_holdout15.jsonl"
+  total_examples: 1330000
+  ood_mixture_ratio: 0.70
+  same_skill_mixture_ratio: 0.30
+  sampling_temperature_alpha: 0.55
+  per_dataset_cap: 50000
+  dynamic_option_shuffle: true
+  full_k_step_probability: 0.70
+  hard_negative_k_range: [8, 64]
+
+training:
+  epochs: 2
+  max_packed_tokens: 4096
+  freeze_bottom_layers: 14
+  unfreeze_at_step: 2500
+  optimizer: "AdamW"
+  adam_betas: [0.9, 0.98]
+  adam_eps: 1.0e-6
+  backbone_lr: 3.0e-5
+  head_lr: 1.5e-4
+  llrd_decay: 0.95
+  min_backbone_lr: 3.0e-6
+  weight_decay: 0.01
+  warmup_ratio: 0.05
+  lr_scheduler: "cosine"
+  max_grad_norm: 1.0
+  backbone_precision: "bfloat16"
+  head_precision: "float32"
+
+loss:
+  kd_alpha: 0.0
+  kd_temperature: 2.0
+  margin: 1.0
+  margin_weight: 0.15
+  zlpr_weight: 0.35
+
+# Hardware Profiles for Google Colab Pro
+colab_pro_profiles:
+  a100_80gb:
+    per_device_requests: 8
+    gradient_accumulation_steps: 4
+    effective_batch_requests: 32
+    gradient_checkpointing: false
+    tf32: true
+  a100_40gb:
+    per_device_requests: 4
+    gradient_accumulation_steps: 8
+    effective_batch_requests: 32
+    gradient_checkpointing: false
+    tf32: true
+  l4_24gb:
+    per_device_requests: 2
+    gradient_accumulation_steps: 16
+    effective_batch_requests: 32
+    gradient_checkpointing: true
+    tf32: true
+  t4_16gb:
+    per_device_requests: 1
+    gradient_accumulation_steps: 32
+    effective_batch_requests: 32
+    gradient_checkpointing: true
+    tf32: false

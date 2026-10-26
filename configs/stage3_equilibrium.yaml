@@ -1,0 +1,82 @@
+# Stage 3: Gold-Weighted Equilibrium Fine-Tuning, Linked-Case Alignment & Model Souping
+# Optimized for Google Colab Pro (A100 40GB/80GB, L4 24GB, or T4 16GB)
+stage: "stage3_equilibrium"
+seeds: [42, 1337, 2026]
+model_config: "configs/model_150m.yaml"
+init_checkpoint: "checkpoints/jev-set-150m-stage2"
+output_dir: "checkpoints/jev-set-150m-stage3"
+final_soup_output_dir: "checkpoints/jev-set-150m-final"
+
+data:
+  train_path: "data/processed/stage3_equilibrium_train.jsonl"
+  val_same_skill_path: "data/processed/s_val_5fold.jsonl"
+  val_new_domains_path: "data/processed/o_val_holdout15.jsonl"
+  total_examples: 250000
+  ood_mixture_ratio: 0.35
+  same_skill_mixture_ratio: 0.65
+  gold_benchmark_multiplier: 1.2
+  cluster_by_group_id: true
+  sampling_temperature_alpha: 0.55
+
+training:
+  epochs: 1
+  max_packed_tokens: 8192
+  freeze_bottom_layers: 0
+  unfreeze_at_step: 0
+  optimizer: "AdamW"
+  adam_betas: [0.9, 0.98]
+  adam_eps: 1.0e-6
+  backbone_lr: 5.0e-6
+  head_lr: 1.5e-5
+  llrd_decay: 0.95
+  min_backbone_lr: 0.0
+  weight_decay: 0.01
+  warmup_ratio: 0.03
+  lr_scheduler: "cosine"
+  max_grad_norm: 1.0
+  backbone_precision: "bfloat16"
+  head_precision: "float32"
+
+loss:
+  kd_alpha: 0.35
+  kd_temperature: 2.0
+  margin: 1.0
+  margin_weight: 0.20
+  zlpr_weight: 0.35
+  linked_case_consistency_weight: 0.25
+
+souping_and_calibration:
+  wise_ft_stage2_weight: 0.15
+  wise_ft_stage3_soup_weight: 0.85
+  lbfgs_max_iter: 200
+  lbfgs_lr: 0.05
+  nll_weight: 0.70
+  brier_weight: 0.30
+  l2_reg: 1.0e-4
+
+# Hardware Profiles for Google Colab Pro
+colab_pro_profiles:
+  a100_80gb:
+    per_device_requests: 4
+    gradient_accumulation_steps: 8
+    effective_batch_requests: 32
+    gradient_checkpointing: false
+    tf32: true
+  a100_40gb:
+    per_device_requests: 2
+    gradient_accumulation_steps: 16
+    effective_batch_requests: 32
+    gradient_checkpointing: true
+    tf32: true
+  l4_24gb:
+    per_device_requests: 1
+    gradient_accumulation_steps: 32
+    effective_batch_requests: 32
+    gradient_checkpointing: true
+    tf32: true
+  t4_16gb:
+    per_device_requests: 1
+    gradient_accumulation_steps: 32
+    effective_batch_requests: 32
+    gradient_checkpointing: true
+    tf32: false
